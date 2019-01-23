@@ -28,7 +28,7 @@
 */
 // NOTE: Documentation for these functions can be found in xbee/serial.h.
 
-#if defined POSIX
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 
 #include <limits.h>
 #include <errno.h>
@@ -324,7 +324,7 @@ int xbee_ser_open( xbee_serial_t *serial, uint32_t baudrate)
 
 	// Configure file descriptor to not block on read() if there aren't
 	// any characters available.
-	fcntl( serial->fd, F_SETFL, FNDELAY);
+    //fcntl( serial->fd, F_SETFL, FNDELAY);
 
 	// reset port before setting actual baudrate
 	xbee_ser_baudrate( serial, 0);

@@ -323,7 +323,7 @@
 	#include XBEE_PLATFORM_HEADER
 #elif defined __DC__
 	#include "xbee/platform_rabbit.h"
-#elif defined POSIX
+#elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 	#include "xbee/platform_posix.h"
 #elif defined __DOS__
 	// Note: at present, only Open Watcom compiler supported

@@ -74,8 +74,8 @@ Xbee::Xbee(QString portname, QObject *parent) :
          * Setup a thread to receive data
          */
 
-        tickThread = QThread::create([&] {tick();});
         threadRun = true;
+        tickThread = QThread::create([&] {tick();});
         tickThread->start();
 
         /*
@@ -84,7 +84,7 @@ Xbee::Xbee(QString portname, QObject *parent) :
         xbee_cmd_query_device(&xbee,0);
         while((xbeeStatusError = xbee_cmd_query_status(&xbee)) != 0)
         {
-            if(xbeeStatusError == -EINVAL || xbeeStatusError == -ETIMEDOUT)
+            if(xbeeStatusError == -EINVAL )//|| xbeeStatusError == -ETIMEDOUT)
             {
                 threadRun = false;
                 return;
@@ -147,6 +147,7 @@ void Xbee::updateNodeMap()
     }
     nodeAddressMap.swap(tempNodeMap);
 }
+
 QMap<int, QString> &Xbee::getNodeMap()
 {
     return nodeAddressMap;
@@ -207,8 +208,8 @@ void Xbee::initXbeeSerPort(QString portname)
 {
     memset(&xbeePort,0,sizeof(xbee_serial_t));
     xbeePort.baudrate=9600;
-#if defined POSIX
-    strncpy(xbeePort.device,portname.toLocal8Bit().data(),sizeof(xbeePort.device));
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+    snprintf(xbeePort.device,sizeof(xbeePort.device),"/dev/%s",portname.toLocal8Bit().data());
 #elif defined WIN32 || defined _WIN32 || defined _WIN32_ || defined __WIN32__ \
     || defined __CYGWIN32__ || defined MINGW32
     xbeePort.comport=portname.remove(0,3).toInt();

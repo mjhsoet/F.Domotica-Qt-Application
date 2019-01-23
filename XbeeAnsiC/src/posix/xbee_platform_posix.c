@@ -20,7 +20,7 @@
 			the seconds timer (base it on the HCS08 regression).
 */
 
-#if defined POSIX
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 
 #include <time.h>
 #include <sys/time.h>
