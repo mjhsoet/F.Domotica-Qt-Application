@@ -25,6 +25,7 @@ public:
     explicit Xbee(QString portname, QObject *parent = nullptr);
     ~Xbee();
 public:
+    int getXbeeError();
     void tick();
     void updateNodeMap();
     QMap<int,QString> &getNodeMap();
@@ -39,12 +40,14 @@ private:
     xbee_dev_t xbee;
     xbee_serial_t xbeePort;
 
-    QTimer *discoveryTimer;
+    int xbeeStatusError = 0;
+
+    QTimer *discoveryTimer = nullptr;
 
     QMap<int,QString> nodeAddressMap;
 
     bool threadRun;
-    QThread *tickThread;
+    QThread *tickThread = nullptr;
 
 };
 
