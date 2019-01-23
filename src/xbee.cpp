@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <stdlib.h>
 #include <string.h>
+#include "xbee/serial.h"
 #include "xbee/atcmd.h"
 #include "xbee/device.h"
 #include "xbee/wpan.h"
@@ -62,39 +63,64 @@ Xbee::Xbee(QString portname, QObject *parent) :
     QObject(parent)
 {
     initXbeeSerPort(portname);
-    xbee_dev_init(&xbee, &xbeePort, nullptr, nullptr);
+    xbeeStatusError |= xbee_dev_init(&xbee, &xbeePort, nullptr, nullptr);
     xbee_dev_flowcontrol(&xbee, false);
     xbee_wpan_init(&xbee, endpoints);
 
 
+    if(xbeeStatusError == 0)
+    {
+        /*
+         * Setup a thread to receive data
+         */
 
-    /*
-     * Setup a thread to receive data
-     */
+        tickThread = QThread::create([&] {tick();});
+        threadRun = true;
+        tickThread->start();
 
-    tickThread = QThread::create([&] {tick();});
-    threadRun = true;
-    tickThread->start();
+        /*
+         * Get local device information (address and name)
+         */
+        xbee_cmd_query_device(&xbee,0);
+        while((xbeeStatusError = xbee_cmd_query_status(&xbee)) != 0)
+        {
+            if(xbeeStatusError == -EINVAL || xbeeStatusError == -ETIMEDOUT)
+            {
+                threadRun = false;
+                return;
+            }
+        }
+        xbee_disc_add_node_id_handler(&xbee,node_discovered);
 
-    xbee_cmd_query_device(&xbee,0);
-    while(xbee_cmd_query_status(&xbee) != 0);
-    xbee_disc_add_node_id_handler(&xbee,node_discovered);
-    /*
-     * Setup Network discovery with a timer
-     */
-    discoverNodes();
-    discoveryTimer = new QTimer(this);
-    connect(discoveryTimer,SIGNAL(timeout()),this,SLOT(discoverNodes()));
-    discoveryTimer->start(10000);
+        /*
+         * Setup Network discovery with a timer
+         */
+        discoverNodes();
+        discoveryTimer = new QTimer(this);
+        connect(discoveryTimer,SIGNAL(timeout()),this,SLOT(discoverNodes()));
+        discoveryTimer->start(10000);
+    }
 }
 
 Xbee::~Xbee()
 {
-    discoveryTimer->stop();
-    threadRun = false;
-    while(tickThread->isRunning());
-    delete discoveryTimer;
-    delete tickThread;
+    xbee_ser_close(&xbeePort); //Closing handles or FD's
+    if(discoveryTimer != nullptr)
+    {
+        discoveryTimer->stop();
+        delete discoveryTimer;
+    }
+    if(tickThread != nullptr)
+    {
+        threadRun = false;
+        while(tickThread->isRunning());
+        delete tickThread;
+    }
+}
+
+int Xbee::getXbeeError()
+{
+    return xbeeStatusError;
 }
 
 void Xbee::discoverNodes()

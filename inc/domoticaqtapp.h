@@ -23,12 +23,12 @@ class DomoticaQTApp : public QWidget
     }buttonListState_t;
 
 public:
-    explicit DomoticaQTApp(QString portname, QWidget *parent = nullptr);
+    explicit DomoticaQTApp(QWidget *parent = nullptr);
     ~DomoticaQTApp();
 public slots:
     void refreshNodeList();
 private:
-
+    void initXbee(QString portname);
     void setButtonAssignmentList();
     void setDeviceAssignmentList();
 
@@ -48,12 +48,17 @@ private slots:
 
     void on_nodeList_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
+    void on_portButton_released();
+
 private:
     Ui::DomoticaQTApp *ui;
-    Xbee *xbee;
+
+    Xbee *xbee = nullptr;
+    bool xbeeInitialized = false;
+
     QTimer *nodeListRefreshTimer;
-    QString nodeClicked;
-    int selectedNode;
+
+    int selectedNode = -1;
     int selectedActuatorNode;
     buttonListState_t buttonListState = BUTTON_LIST_STATE_nodelist;
 
