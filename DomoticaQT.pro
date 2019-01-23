@@ -26,8 +26,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += \
     c++11 \
-    c99 #\
-    #console
+    c99
 
 SOURCES += \
     src/domoticaqtapp.cpp \

@@ -79,8 +79,8 @@ FAR xbee_cmd_request_t xbee_cmd_request_table[XBEE_CMD_REQUEST_TABLESIZE];
 _xbee_atcmd_debug
 int xbee_cmd_tick( void)
 {
-	static uint8_t					last_time;
-	uint8_t							now;
+    static uint32_t					last_time;
+    uint32_t							now;
 	uint_fast8_t					i;
 	int								reuse;
 	xbee_cmd_request_t	FAR *request;
@@ -89,7 +89,7 @@ int xbee_cmd_tick( void)
 	int								count = 0;
 
 	// only process expirations once per second
-	now = (uint8_t) xbee_seconds_timer();
+    now = xbee_seconds_timer();
 	if (last_time == now)
 	{
 		return 0;
