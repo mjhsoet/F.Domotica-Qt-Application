@@ -2,6 +2,8 @@
 #define PORTSELECT_H
 
 #include <QDialog>
+#include <QListView>
+#include <QListWidgetItem>
 #include <QSerialPortInfo>
 
 namespace Ui {
@@ -21,6 +23,8 @@ private slots:
     void on_pushButtonRefresh_released();
 
     void on_pushButtonSelect_released();
+
+    void on_portList_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
 private:
     void refreshList(void);

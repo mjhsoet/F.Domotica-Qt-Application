@@ -1,6 +1,7 @@
 #include "domoticaqtapp.h"
 #include "ui_domoticaqtapp.h"
 #include "portselect.h"
+#include "info.h"
 #include <QTimer>
 #include <QDebug>
 #include "xbee.h"
@@ -18,12 +19,19 @@ DomoticaQTApp::DomoticaQTApp(QWidget *parent) :
     {
         initXbee(portSelectWindow->getPortName());
     }
+    else
+    {
+        ui->debugWindow->setText("No port selected");
+    }
     delete portSelectWindow;
 }
 
 DomoticaQTApp::~DomoticaQTApp()
 {
-    delete xbee;
+    if(xbee != nullptr)
+    {
+        delete xbee;
+    }
     delete ui;
 }
 
@@ -50,13 +58,13 @@ void DomoticaQTApp::initXbee(QString portname)
 
 void DomoticaQTApp::refreshNodeList()
 {
-    const QMap<int,QString> &nodeMap = xbee->getNodeMap();
+    nodeAddressMap = xbee->getNodeAddressMap();
     xbee->updateNodeMap();
     ui->nodeList->clear();
     ui->buttonSelectList->clear();
     buttonListState = BUTTON_LIST_STATE_nolist;
-    auto end = nodeMap.cend();
-    for(auto nodePair = nodeMap.cbegin(); nodePair != end; ++nodePair )
+    auto end = nodeAddressMap.cend();
+    for(auto nodePair = nodeAddressMap.cbegin(); nodePair != end; ++nodePair )
     {
         QListWidgetItem *item = new QListWidgetItem(nodePair.value(),ui->nodeList);
         item->setData(Qt::UserRole,nodePair.key());
@@ -66,10 +74,9 @@ void DomoticaQTApp::refreshNodeList()
 
 void DomoticaQTApp::setButtonAssignmentList()
 {
-    const QMap<int,QString> &nodeMap = xbee->getNodeMap();
     ui->buttonSelectList->clear();
-    auto end = nodeMap.cend();
-    for(auto nodePair = nodeMap.cbegin(); nodePair != end; ++nodePair )
+    auto end = nodeAddressMap.cend();
+    for(auto nodePair = nodeAddressMap.cbegin(); nodePair != end; ++nodePair )
     {
         QListWidgetItem *item = new QListWidgetItem(nodePair.value(),ui->buttonSelectList);
         item->setData(Qt::UserRole,nodePair.key());
@@ -93,8 +100,7 @@ void DomoticaQTApp::on_redLed_released()
 {
     if(xbeeInitialized && selectedNode != -1)
     {
-        const QMap<int,QString> &nodeMap = xbee->getNodeMap();
-        QString currentNodeName = nodeMap[selectedNode];
+        QString currentNodeName = nodeAddressMap[selectedNode];
 
         xbee->toggleLed(selectedNode,Xbee::red);
         ui->debugWindow->append ("Toggling red LED on: \"" +currentNodeName + "\"");
@@ -106,8 +112,7 @@ void DomoticaQTApp::on_greenLed_released()
 {
     if(xbeeInitialized && selectedNode != -1)
     {
-        const QMap<int,QString> &nodeMap = xbee->getNodeMap();
-        QString currentNodeName = nodeMap[selectedNode];
+        QString currentNodeName = nodeAddressMap[selectedNode];
 
         xbee->toggleLed(selectedNode,Xbee::green);
         ui->debugWindow->append ("Toggling green LED on: \"" +currentNodeName + "\"");
@@ -119,7 +124,7 @@ void DomoticaQTApp::on_buttonAssign_released()
 {
     if(xbeeInitialized && selectedNode != -1)
     {
-        QString currentNodeName = ui->nodeList->currentItem()->text();
+        QString currentNodeName = nodeAddressMap[selectedNode];
 
         ui->debugWindow->append ("Assigning button on: \"" + currentNodeName + "\"");
         setButtonAssignmentList();
@@ -156,20 +161,18 @@ void DomoticaQTApp::on_buttonSelectList_itemDoubleClicked(QListWidgetItem *selec
 
 void DomoticaQTApp::on_refreshButton_released()
 {
-    ui->debugWindow->append("Refreshing nodes");
     if(xbeeInitialized)
     {
+        ui->debugWindow->append("Refreshing nodes");
         refreshNodeList();
-
     }
 }
 
 void DomoticaQTApp::on_nodeList_itemChanged(QListWidgetItem *item)
 {
-    QMap<int,QString> &nodeMap = xbee->getNodeMap();
     const int &nodeAddr = item->data(Qt::UserRole).toInt();
     const QString &newName = item->text();
-    const QString &oldName = nodeMap[nodeAddr];
+    const QString &oldName = nodeAddressMap[nodeAddr];
 
 
     if(newName != oldName)
@@ -178,7 +181,7 @@ void DomoticaQTApp::on_nodeList_itemChanged(QListWidgetItem *item)
         {
             ui->debugWindow->append("Renaming \""+oldName+"\" to \""+newName +"\"");
             xbee->renameNode(nodeAddr,newName);
-            nodeMap[nodeAddr] = newName;
+            nodeAddressMap[nodeAddr] = newName;
         }
         else
         {
@@ -213,5 +216,24 @@ void DomoticaQTApp::on_portButton_released()
     if(portSelectWindow->exec() == QDialog::Accepted)
     {
         initXbee(portSelectWindow->getPortName());
+    }
+    else
+    {
+        ui->debugWindow->setText("No port selected");
+    }
+}
+
+void DomoticaQTApp::on_infoButton_released()
+{
+    info *infoWindow;
+    if(xbeeInitialized && selectedNode != -1)
+    {
+        infoWindow = new info(this);
+        infoWindow->setNodeName(nodeAddressMap[selectedNode]);
+        infoWindow->setNodeType(xbee->getNodeType(selectedNode));
+        infoWindow->setNetworkAddress(QString("0x%1").arg(selectedNode, 4, 16, QChar('0')));
+        infoWindow->setIEEEAddress(xbee->getNodeIEEE(selectedNode));
+        infoWindow->exec();
+
     }
 }

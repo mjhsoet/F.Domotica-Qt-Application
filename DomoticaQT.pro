@@ -68,7 +68,8 @@ SOURCES += \
     XbeeAnsiC/src/zigbee/zigbee_zcl.c \
     XbeeAnsiC/src/zigbee/zigbee_zdo.c \
     src/xbee.cpp \
-    portselect.cpp
+    portselect.cpp \
+    info.cpp
 
 
 INCLUDEPATH += \
@@ -131,11 +132,13 @@ HEADERS += \
     XbeeAnsiC/include/zigbee/zcl_types.h \
     XbeeAnsiC/include/zigbee/zdo.h \
     inc/xbee.h \
-    portselect.h
+    portselect.h \
+    info.h
 
 FORMS += \
         domoticaqtapp.ui \
-    portselect.ui
+    portselect.ui \
+    info.ui
 
 
 # Default rules for deployment.
