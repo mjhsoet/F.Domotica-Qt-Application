@@ -50,9 +50,11 @@ private slots:
 
     void on_portButton_released();
 
+    void on_infoButton_released();
+
 private:
     Ui::DomoticaQTApp *ui;
-
+    QMap<int,QString> nodeAddressMap;
     Xbee *xbee = nullptr;
     bool xbeeInitialized = false;
 

@@ -7,7 +7,7 @@ PortSelect::PortSelect(QWidget *parent) :
     ui(new Ui::PortSelect)
 {
     ui->setupUi(this);
-    refreshList();
+    //refreshList(); //Calling this in the constructor causes currentItemchanged to be called resulting in the first port being selected (even if it isn't selected)
 }
 
 PortSelect::~PortSelect()
@@ -39,7 +39,18 @@ void PortSelect::on_pushButtonRefresh_released()
 
 void PortSelect::on_pushButtonSelect_released()
 {
-    portname = ui->portList->currentItem()->text();
-    this->close();
-    this->setResult(QDialog::Accepted);
+    if(!portname.isEmpty())
+    {
+        this->close();
+        this->setResult(QDialog::Accepted);
+    }
+}
+
+void PortSelect::on_portList_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+{
+    portname.clear();
+    if(current != nullptr)
+    {
+        portname = current->text();
+    }
 }

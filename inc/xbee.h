@@ -28,23 +28,24 @@ public:
     int getXbeeError();
     void tick();
     void updateNodeMap();
-    QMap<int,QString> &getNodeMap();
+    QMap<int, QString> getNodeAddressMap();
+    QString getNodeType(int nwk_addr);
+    QString getNodeIEEE(int nwk_addr);
     void toggleLed(int nwk_addr, LED led);
     void setButton(int sensor_nwk_addr,int actuator_nwk_addr, LED led);
     void renameNode(int nwk_addr, QString name);
 private:
-    void initXbeeSerPort(QString portname);
+    void initXbeeSerPort(xbee_serial_t *xbeePort, QString portname);
 private slots:
     void discoverNodes();
 private:
     xbee_dev_t xbee;
-    xbee_serial_t xbeePort;
 
     int xbeeStatusError = 0;
 
     QTimer *discoveryTimer = nullptr;
 
-    QMap<int,QString> nodeAddressMap;
+    QMap<int,xbee_node_id_t> nodeMap;
 
     bool threadRun;
     QThread *tickThread = nullptr;
